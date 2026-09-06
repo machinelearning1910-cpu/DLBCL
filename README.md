@@ -1,204 +1,204 @@
-# FairLoRA-Enabled Federated Multi-Task Learning for Intelligent Sepsis Management
+# FairLoRA-Enabled Multimodal Multi-Task Learning for Patient-Level DLBCL Characterization
 
-This repository provides the implementation associated with the paper:
+This repository contains the implementation associated with the paper:
 
-**FairLoRA-Enabled Federated Multi-Task Learning for Intelligent Sepsis Management**
+**FairLoRA-Enabled Multimodal Multi-Task Learning for Patient-Level DLBCL Characterization**
 
-The framework is designed for intelligent sepsis management in distributed healthcare environments by combining **Transformer-based temporal clinical modeling**, **Federated Learning**, **fairness-aware Low-Rank Adaptation (FairLoRA)**, and **Multi-Task Learning** within a unified architecture.
+The proposed framework combines **multi-stain histopathology**, **quantitative cellular morphology**, **structured clinical information**, **FairLoRA-based parameter-efficient adaptation**, **hierarchical attention**, **multi-task learning**, **survival-risk estimation**, and **fairness-aware optimization** for patient-level characterization of diffuse large B-cell lymphoma (DLBCL).
 
 ---
 
 ## Overview
 
-Sepsis prediction from intensive care unit (ICU) records is challenging because clinical measurements are temporal, patient populations differ across hospitals, and healthcare data cannot be freely centralized because of privacy concerns. In addition, conventional deep-learning models can introduce substantial communication and computational overhead when deployed in federated settings.
+Diffuse large B-cell lymphoma (DLBCL) is highly heterogeneous across morphology, immunophenotype, and clinical presentation. The proposed framework is designed to integrate complementary patient-level information while preserving the biological relationships among multiple pathology stains and related clinical endpoints.
 
-The proposed framework addresses these challenges through:
+The framework uses:
 
-1. **Transformer-based temporal modeling** of longitudinal ICU records.
-2. **Federated learning with FedAvg** for collaborative training across distributed hospitals without sharing raw patient data.
-3. **FairLoRA** for fairness-aware and parameter-efficient model adaptation.
-4. **Multi-task learning** for simultaneous sepsis prediction, recovery forecasting, and organ failure risk assessment.
-5. **Fairness evaluation** across age groups, gender categories, and participating hospitals.
-
----
+- H&E, CD10, BCL6, MUM1/IRF4, BCL2, and MYC pathology
+- a pretrained ViT-Tiny/16 backbone
+- FairLoRA-based low-rank adaptation
+- patch-level and stain-level hierarchical attention
+- quantitative cellular morphology
+- structured clinical information
+- shared multi-task prediction
+- survival-risk estimation
+- age-aware fairness evaluation
 
 <p align="center">
   <img src="figures/overall_workflow.png" width="900">
 </p>
 
 <p align="center">
-  <b>Overall workflow of the proposed FairLoRA-enabled federated multi-task sepsis framework.</b>
+  <b>Overall workflow of the proposed FairLoRA-enabled multimodal and multi-task DLBCL framework.</b>
 </p>
 
 ---
 
 ## Methodology
 
-### 1. Clinical Data Preprocessing
+### 1. Patient-Level Data Preparation
 
-The framework operates on multivariate ICU time-series records from the PhysioNet/Computing in Cardiology Challenge 2019 dataset.
+All pathology patches, morphology measurements, clinical attributes, and prediction targets are aligned using the patient identifier. Patient-level splitting is performed before model optimization to prevent correlated patches from the same patient from appearing across different experimental partitions.
 
-The preprocessing pipeline includes:
+### 2. Multi-Stain Histopathology
 
-- missing-value handling using median imputation,
-- Z-score normalization of continuous clinical variables,
-- retention of 37 clinical features after preprocessing,
-- construction of 24-hour temporal patient sequences,
-- preparation of labels for the three clinical prediction tasks.
+The pathology branch integrates six complementary staining modalities:
 
-### 2. Transformer-Based Temporal Encoder
+- H&E
+- CD10
+- BCL6
+- MUM1/IRF4
+- BCL2
+- MYC
 
-A Transformer encoder is used to model temporal dependencies across longitudinal ICU observations. The encoder learns patient representations from 24-hour clinical sequences and captures changes associated with disease progression.
+Each stain provides complementary morphological or immunophenotypic information relevant to DLBCL characterization.
 
-### 3. FairLoRA Adaptation
+<p align="center">
+  <img src="figures/hierarchical_multistain.png" width="850">
+</p>
 
-FairLoRA introduces low-rank trainable adaptation parameters while keeping the main model parameters largely fixed. This reduces the number of trainable parameters and lowers communication overhead during federated optimization while supporting fairness-aware learning.
+<p align="center">
+  <b>Hierarchical multi-stain representation showing the contribution of the six pathology modalities.</b>
+</p>
 
-### 4. Federated Learning
+### 3. FairLoRA-Based Visual Adaptation
 
-The federated environment consists of **five heterogeneous hospitals** with non-IID demographic distributions.
+A pretrained ViT-Tiny/16 backbone is adapted using FairLoRA. The low-rank adaptation strategy keeps the majority of pretrained backbone parameters fixed while optimizing a substantially smaller set of task-adaptive parameters.
 
-Each hospital:
+### 4. Hierarchical Attention
 
-- maintains its patient data locally,
-- receives the current global model,
-- performs local model training,
-- transmits model updates rather than raw clinical records.
+The framework applies two levels of attention:
 
-The central server aggregates local updates using **Federated Averaging (FedAvg)** to produce the updated global model.
+- **Patch-level attention** to identify informative tissue regions within each stain.
+- **Stain-level attention** to learn the relative contribution of each available staining modality at the patient level.
 
-### 5. Multi-Task Prediction
+### 5. Multimodal Fusion
 
-A shared patient representation is used to jointly support three clinically relevant tasks:
+The learned pathology representation is combined with quantitative cellular morphology and structured clinical information to obtain a unified patient-level multimodal representation.
 
-- **Sepsis prediction**
-- **Recovery forecasting**
-- **Organ failure risk assessment**
+### 6. Multi-Task Prediction
 
-The multi-task formulation enables the model to learn shared clinical information while maintaining task-specific prediction outputs.
+The shared multimodal representation supports five classification endpoints:
 
-### 6. Fairness Evaluation
+- EVENT
+- HANS
+- MYC
+- BCL2
+- BCL6
 
-Fairness is assessed across heterogeneous demographic groups and participating hospitals using:
+Separate task-specific prediction heads are used while preserving a common patient-level representation.
 
-- Demographic Parity Difference (DPD)
-- Equal Opportunity Difference (EOD)
-- False Positive Rate Gap (FPR Gap)
-- AUROC disparity analysis
+### 7. Survival-Risk Estimation
+
+A dedicated survival branch produces a continuous patient-level risk score and is optimized using a pairwise ranking-based survival objective.
+
+### 8. Fairness-Aware Learning
+
+Age is retained as a protected attribute for fairness analysis rather than being directly included as a predictive feature. Fairness assessment includes subgroup disparity analysis using metrics such as demographic parity, equal opportunity, false-positive-rate differences, subgroup AUROC, and survival concordance gaps.
 
 ---
 
 ## Dataset
 
-Experiments were conducted using the **PhysioNet/Computing in Cardiology Challenge 2019** sepsis dataset.
+The experiments were conducted using the **DLBCL-Morph cohort**.
 
-The original dataset contains multivariate ICU time-series measurements, including physiological variables, laboratory biomarkers, demographic information, and hospitalization-related attributes. The proposed framework retains **37 clinical features** after preprocessing and represents each patient using a **24-hour temporal sequence**.
+The final experimental cohort contains:
 
-Dataset:
+| Partition | Patients |
+|---|---:|
+| Training | 117 |
+| Validation | 26 |
+| Test | 27 |
+| **Total** | **170** |
 
-https://physionet.org/content/challenge-2019/1.0.0/
+The framework integrates multi-stain pathology, cellular morphology, immunohistochemistry information, and structured patient-level clinical variables.
 
 ---
 
-## Federated Experimental Setup
+## Experimental Setup
 
-| Parameter | Setting |
+| Component | Experimental Setting |
 |---|---|
-| Federated framework | FedAvg |
-| Number of hospitals | 5 |
-| Temporal encoder | Transformer Encoder |
-| Fairness module | FairLoRA |
-| Number of tasks | 3 |
-| Clinical features | 37 |
-| Sequence length | 24 hours |
-| Local epochs | 30 |
-| Communication rounds | 10 |
-| Batch size | 128 |
+| Computing platform | Google Colab |
+| GPU | NVIDIA L4 |
+| GPU memory | approximately 23.7 GB |
+| Framework | PyTorch 2.11.0 |
+| CUDA | CUDA 12.8 |
+| Input image size | 224 × 224 RGB |
+| Visual backbone | Pretrained ViT-Tiny/16 |
+| Adaptation strategy | FairLoRA / low-rank attention adaptation |
+| LoRA rank | 8 |
 | Optimizer | AdamW |
-| Learning-rate scheduler | Cosine Annealing |
-| Loss formulation | Multi-Task Loss |
+| Main image modalities | H&E, CD10, BCL6, MUM1, BCL2, MYC |
+| Prediction formulation | Shared multi-task learning |
+| Main outputs | EVENT, HANS, MYC, BCL2, BCL6 |
+| Survival analysis | Overall-survival risk and concordance analysis |
 
 ---
 
 ## Results
 
-The proposed framework achieved the following overall predictive performance:
+The proposed framework achieved the following overall performance on the held-out test cohort:
 
 | Metric | Performance |
 |---|---:|
-| Accuracy | **93.26%** |
-| AUROC | **0.824** |
-| AUPRC | **0.978** |
-| Precision | **0.882** |
-| Recall | **0.915** |
-| F1-score | **0.898** |
+| AUROC | **0.937** |
+| AUPRC | **0.884** |
+| Accuracy | **0.917** |
 
-### Cross-Hospital Performance
+Task-specific test AUROCs were:
 
-The model maintained stable performance across five hospitals with heterogeneous non-IID demographic distributions. The largest reported cross-hospital AUROC difference was **0.060**.
+| Task | AUROC |
+|---|---:|
+| EVENT | **0.961** |
+| HANS | **0.926** |
+| MYC | **0.913** |
+| BCL2 | **0.950** |
+| BCL6 | **0.933** |
 
 <p align="center">
-  <img src="figures/cross_hospital_roc.png" width="760">
+  <img src="figures/multitask_performance.png" width="800">
 </p>
 
 <p align="center">
-  <b>Cross-hospital ROC analysis of the proposed FairLoRA-enabled framework.</b>
+  <b>Multi-task performance comparison across validation and independent test results.</b>
 </p>
 
-### Parameter Efficiency
+---
 
-FairLoRA reduced the number of trainable parameters from **1,216,135** to **123,271**, corresponding to an **89.86% reduction** relative to standard federated training.
+## Parameter Efficiency
+
+FairLoRA reduced the number of trainable parameters from **5,735,975** to **211,559**, corresponding to a **96.31% reduction** compared with full fine-tuning.
 
 <p align="center">
   <img src="figures/parameter_efficiency.png" width="700">
 </p>
 
 <p align="center">
-  <b>Trainable parameter comparison between standard FedAvg and FairLoRA.</b>
-</p>
-
-### Fairness Analysis
-
-The framework was evaluated across age groups, gender categories, and participating hospitals to examine demographic consistency and subgroup disparities.
-
-<p align="center">
-  <img src="figures/fairness_metrics.png" width="760">
-</p>
-
-<p align="center">
-  <b>Fairness-gap analysis across demographic attributes.</b>
+  <b>Comparison of trainable parameters for full fine-tuning and FairLoRA adaptation.</b>
 </p>
 
 ---
 
-## Installation
+## Fairness Analysis
 
-Clone the repository:
+All reported validation fairness gaps remained below **0.10**. The framework evaluates age-based subgroup disparities while keeping age separate from the direct predictive representation.
 
-```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
-cd YOUR_REPOSITORY_NAME
-```
-
-Install the required Python packages:
-
-```bash
-pip install -r requirements.txt
-```
+Detailed fairness analyses are reported in the paper using demographic parity, equal opportunity, false-positive-rate differences, AUROC disparity, and survival-concordance gaps.
 
 ---
 
-## Running the Framework
+## Interpretability
 
-Place the PhysioNet Sepsis Challenge data in your project data directory and update the dataset path in your training script.
+Gradient-based interpretability is used to visualize regions contributing to model decisions for representative pathology cases.
 
-Example:
+<p align="center">
+  <img src="figures/gradcam_interpretability.png" width="850">
+</p>
 
-```bash
-python main.py
-```
-
-The implementation should follow the experimental configuration reported in the paper: five non-IID hospitals, 30 local epochs, 10 communication rounds, batch size 128, AdamW optimization, and cosine-annealing learning-rate scheduling.
+<p align="center">
+  <b>Gradient-based interpretability examples showing original pathology patches, Grad-CAM heatmaps, and overlay visualizations.</b>
+</p>
 
 ---
 
@@ -213,38 +213,53 @@ YOUR_REPOSITORY_NAME/
 │
 ├── figures/
 │   ├── overall_workflow.png
-│   ├── cross_hospital_roc.png
+│   ├── hierarchical_multistain.png
+│   ├── multitask_performance.png
 │   ├── parameter_efficiency.png
-│   └── fairness_metrics.png
+│   └── gradcam_interpretability.png
 │
-└── data/
-    └── README.md
+└── src/
+    └── ...
 ```
-
-The PhysioNet dataset itself should not be uploaded to the repository unless its license and distribution terms explicitly permit redistribution. The repository can instead provide the official dataset link and instructions for obtaining it.
 
 ---
 
-## Key Features
+## Installation
 
-- Privacy-preserving federated training across multiple hospitals
-- Transformer-based temporal representation learning
-- FairLoRA-based parameter-efficient adaptation
-- Demographic fairness evaluation
-- Non-IID federated healthcare simulation
-- Simultaneous three-task clinical prediction
-- Cross-hospital generalization analysis
-- Parameter-efficiency evaluation
+Clone the repository:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
+cd YOUR_REPOSITORY_NAME
+```
+
+Install the required dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Usage
+
+Update the dataset paths and configuration according to your local environment, then run the main training script.
+
+Example:
+
+```bash
+python main.py
+```
 
 ---
 
 ## Citation
 
-If you use this work, please cite the associated paper. Replace the placeholder author information below with the final publication details when available.
+If you use this work, please cite the associated paper. Replace the placeholder author and publication information with the final bibliographic details after publication.
 
 ```bibtex
-@article{fairlora_sepsis_2026,
-  title   = {FairLoRA-Enabled Federated Multi-Task Learning for Intelligent Sepsis Management},
+@article{fairlora_dlbcl_2026,
+  title   = {FairLoRA-Enabled Multimodal Multi-Task Learning for Patient-Level DLBCL Characterization},
   author  = {Authors},
   year    = {2026}
 }
@@ -252,6 +267,6 @@ If you use this work, please cite the associated paper. Replace the placeholder 
 
 ---
 
-## Acknowledgment
+## Notes
 
-This work uses data from the **PhysioNet/Computing in Cardiology Challenge 2019** for early prediction of sepsis from clinical data.
+The repository README presents only the most important visual results. The complete paper contains additional training curves, survival analysis, fairness-generalization results, and pathology examples that can be consulted for the full experimental evaluation.
