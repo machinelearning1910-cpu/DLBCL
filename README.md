@@ -25,7 +25,7 @@ The framework uses:
 - age-aware fairness evaluation
 
 <p align="center">
-  <img src="figures/overall_workflow.png" width="900">
+  <img src="figures/overall-workflow.png" width="900">
 </p>
 
 <p align="center">
@@ -54,7 +54,7 @@ The pathology branch integrates six complementary staining modalities:
 Each stain provides complementary morphological or immunophenotypic information relevant to DLBCL characterization.
 
 <p align="center">
-  <img src="figures/hierarchical_multistain.png" width="850">
+  <img src="figures/hierarchical-multistain.png" width="850">
 </p>
 
 <p align="center">
